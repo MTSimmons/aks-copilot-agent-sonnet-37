@@ -6,8 +6,10 @@ resource "azurerm_container_registry" "acr" {
   admin_enabled       = true
 }
 
-# Assign AcrPull role to the AKS kubelet identity
+# Assign AcrPull role to the AKS kubelet identity (conditional creation)
 resource "azurerm_role_assignment" "aks_acr" {
+  count = var.create_role_assignment ? 1 : 0
+  
   principal_id                     = azurerm_kubernetes_cluster.aks.kubelet_identity[0].object_id
   role_definition_name             = "AcrPull"
   scope                            = azurerm_container_registry.acr.id
@@ -28,4 +30,14 @@ output "acr_admin_username" {
 output "acr_admin_password" {
   value     = azurerm_container_registry.acr.admin_password
   sensitive = true
+}
+
+# Also output resource group name for convenience
+output "resource_group_name" {
+  value = azurerm_resource_group.aks_rg.name
+}
+
+# Output cluster name
+output "cluster_name" {
+  value = azurerm_kubernetes_cluster.aks.name
 }

@@ -39,3 +39,9 @@ variable "prefix" {
   type        = string
   default     = "aksdemo"
 }
+
+variable "create_role_assignment" {
+  description = "Whether to create the AcrPull role assignment for AKS. Set to false if you don't have Microsoft.Authorization/roleAssignments/write permission."
+  type        = bool
+  default     = false
+}

@@ -39,32 +39,37 @@ az aks get-credentials --resource-group $(terraform output -raw resource_group_n
 
 ### 2. Build and Push the Docker Image
 
-```bash
+```powershell
 # Navigate to the web-app directory
-cd ../web-app
+cd ..\web-app
 
 # Build the Docker image
 docker build -t openai-chat-app .
 
 # Get ACR details
-ACR_NAME=$(cd ../terraform && terraform output -raw acr_login_server)
-ACR_USERNAME=$(cd ../terraform && terraform output -raw acr_admin_username)
-ACR_PASSWORD=$(cd ../terraform && terraform output -raw acr_admin_password)
+Push-Location ..\terraform
+$ACR_NAME = & terraform output -raw acr_login_server
+$ACR_USERNAME = & terraform output -raw acr_admin_username
+$ACR_PASSWORD = & terraform output -raw acr_admin_password
+Pop-Location
 
 # Login to ACR
 docker login $ACR_NAME -u $ACR_USERNAME -p $ACR_PASSWORD
 
 # Tag and push the image
-docker tag openai-chat-app $ACR_NAME/openai-chat-app:latest
-docker push $ACR_NAME/openai-chat-app:latest
+docker tag openai-chat-app ${ACR_NAME}/openai-chat-app:latest
+docker push ${ACR_NAME}/openai-chat-app:latest
 ```
 
 ### 3. Deploy to AKS
 
-```bash
+```powershell
 # Update the ACR name in the k8s manifest
-export ACR_NAME=$(cd ../terraform && terraform output -raw acr_login_server | cut -d'.' -f1)
-envsubst < k8s-deployment.yaml > k8s-deployment-updated.yaml
+Push-Location ..\terraform
+$ACR_NAME = (& terraform output -raw acr_login_server).Split('.')[0]
+Pop-Location
+
+((Get-Content -Path k8s-deployment.yaml) -replace '{{ACR_NAME}}', $ACR_NAME) | Set-Content -Path k8s-deployment-updated.yaml
 
 # Apply the Kubernetes manifests
 kubectl apply -f k8s-deployment-updated.yaml
