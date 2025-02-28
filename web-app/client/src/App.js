@@ -8,47 +8,18 @@ import SendIcon from '@mui/icons-material/Send';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import PersonIcon from '@mui/icons-material/Person';
+import Brightness4Icon from '@mui/icons-material/Brightness4';
+import Brightness7Icon from '@mui/icons-material/Brightness7';
 import ChatMessage from './components/ChatMessage';
 import axios from 'axios';
 
-const theme = createTheme({
-  palette: {
-    mode: 'light',
-    primary: {
-      main: '#2563eb',
-    },
-    secondary: {
-      main: '#10b981',
-    },
-    background: {
-      default: '#f8fafc',
-      paper: '#ffffff',
-    },
-  },
-  typography: {
-    fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
-  },
-  shape: {
-    borderRadius: 8,
-  },
-  components: {
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          textTransform: 'none',
-          fontWeight: 500,
-        },
-      },
-    },
-  },
-});
-
 function App() {
+  const [mode, setMode] = useState('light');
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState([
     { 
       role: 'system', 
-      content: 'You are a helpful assistant that provides accurate, concise, and friendly responses.' 
+      content: 'You are a helpful assistant that provides accurate, concise, and friendly responses with a snarky overtone.' 
     },
     { 
       role: 'assistant', 
@@ -57,6 +28,42 @@ function App() {
   ]);
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef(null);
+
+  const theme = createTheme({
+    palette: {
+      mode,
+      primary: {
+        main: '#2563eb',
+      },
+      secondary: {
+        main: '#10b981',
+      },
+      background: {
+        default: mode === 'light' ? '#f8fafc' : '#121212',
+        paper: mode === 'light' ? '#ffffff' : '#1e1e1e',
+      },
+    },
+    typography: {
+      fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+    },
+    shape: {
+      borderRadius: 8,
+    },
+    components: {
+      MuiButton: {
+        styleOverrides: {
+          root: {
+            textTransform: 'none',
+            fontWeight: 500,
+          },
+        },
+      },
+    },
+  });
+
+  const toggleColorMode = () => {
+    setMode((prevMode) => (prevMode === 'light' ? 'dark' : 'light'));
+  };
 
   // Scroll to bottom whenever messages change
   useEffect(() => {
@@ -126,12 +133,15 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
-        <AppBar position="static" color="default" elevation={0} sx={{ borderBottom: '1px solid #e0e0e0' }}>
+        <AppBar position="static" color="default" elevation={0} sx={{ borderBottom: '1px solid', borderColor: 'divider' }}>
           <Toolbar>
             <SmartToyIcon sx={{ mr: 2, color: theme.palette.primary.main }} />
             <Typography variant="h6" color="inherit" noWrap sx={{ flexGrow: 1, fontWeight: 600 }}>
               Azure OpenAI Chat
             </Typography>
+            <IconButton sx={{ ml: 1 }} onClick={toggleColorMode} color="inherit">
+              {mode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
+            </IconButton>
             <Button 
               variant="outlined" 
               startIcon={<DeleteIcon />}
@@ -165,7 +175,8 @@ function App() {
         <Box component="footer" sx={{ 
           p: 2, 
           backgroundColor: 'background.paper',
-          borderTop: '1px solid #e0e0e0'
+          borderTop: '1px solid',
+          borderColor: 'divider'
         }}>
           <Container maxWidth="md">
             <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex' }}>
