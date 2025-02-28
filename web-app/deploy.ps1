@@ -25,6 +25,17 @@ docker build -t "$ACR_LOGIN_SERVER/azure-openai-chat:latest" .
 Write-Host "Pushing Docker image to ACR..." -ForegroundColor Cyan
 docker push "$ACR_LOGIN_SERVER/azure-openai-chat:latest"
 
+Write-Host "Attaching ACR to AKS cluster..." -ForegroundColor Cyan
+# Fix the ACR name retrieval - we need to go back to terraform directory first
+Push-Location -Path "..\terraform"
+$ACR_NAME = terraform output -raw acr_name
+Pop-Location
+az aks update -n $CLUSTER_NAME -g $RESOURCE_GROUP --attach-acr $ACR_NAME --verbose
+
+# Add a delay to ensure ACR attachment completes
+Write-Host "Waiting for ACR attachment to complete..." -ForegroundColor Yellow
+Start-Sleep -Seconds 30
+
 Write-Host "Updating deployment manifest with ACR login server..." -ForegroundColor Cyan
 (Get-Content -Path "kubernetes\deployment.yaml") -replace '\${ACR_LOGIN_SERVER}', $ACR_LOGIN_SERVER | Set-Content -Path "kubernetes\deployment.yaml"
 
